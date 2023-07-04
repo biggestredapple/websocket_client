@@ -22,3 +22,42 @@ document.querySelector('#app').innerHTML = `
 `
 
 setupCounter(document.querySelector('#counter'))
+
+function createSocket() {
+  const socket_url = `ws://localhost:3000/cable`;
+  const socket = new WebSocket(socket_url);
+
+  socket.onopen = function(event) {
+    console.log("Connected to the Rails server.");
+    const msg = {
+      command: "subscribe",
+      identifier: JSON.stringify({
+        id: 1,
+        channel: 'AlertsChannel'
+      })
+    };
+    socket.send(JSON.stringify(msg));
+  }
+
+  socket.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+
+    if(data.type === 'ping') {
+      return ;
+    }
+    if(data.message) {
+      console.log(data.message);
+    }
+    console.log("Received data from server", event.data);
+  }
+
+  socket.onclose =  function(event) {
+    console.log("Disconnected from the server.");
+  };
+
+  socket.onerror = function(error) {
+    console.log('Websocket error observed:', error)
+  }
+}
+
+createSocket();
